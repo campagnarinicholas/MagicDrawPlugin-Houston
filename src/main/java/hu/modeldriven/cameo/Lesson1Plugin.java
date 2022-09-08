@@ -9,11 +9,11 @@ public class Lesson1Plugin extends Plugin {
     @Override
     public void init() {
         createMainMenuAction();
-        Application.getInstance().getGUILog().showMessage("Hello world from Lesson1");
+        Application.getInstance().getGUILog().showMessage("Hello world from new pack");
     }
 
     private void createMainMenuAction() {
-        var action = new MainMenuAction("Lesson2MainMenuAction", "Lesson 2 Main Menu action");
+        var action = new MainMenuAction("Lesson2MainMenuAction", "Mess With XML");
         var configurator = new MainMenuConfiguration(action);
         ActionsConfiguratorsManager.getInstance().addMainMenuConfigurator(configurator);
     }
