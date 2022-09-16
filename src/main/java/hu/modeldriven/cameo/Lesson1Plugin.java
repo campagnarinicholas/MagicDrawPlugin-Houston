@@ -9,11 +9,12 @@ public class Lesson1Plugin extends Plugin {
     @Override
     public void init() {
         createMainMenuAction();
-        Application.getInstance().getGUILog().showMessage("Hello world from Lesson1");
+        Application.getInstance().getGUILog().showMessage("Test Package Loaded");
     }
 
     private void createMainMenuAction() {
-        var action = new MainMenuAction("Lesson2MainMenuAction", "Lesson 2 Main Menu action");
+        // Where the magic happens
+        var action = new MainMenuAction("Lesson2MainMenuAction", "Houston, do we have a problem?");
         var configurator = new MainMenuConfiguration(action);
         ActionsConfiguratorsManager.getInstance().addMainMenuConfigurator(configurator);
     }
