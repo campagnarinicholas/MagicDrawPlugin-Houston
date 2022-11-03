@@ -12,7 +12,6 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-
 public class MainMenuAction extends MDAction {
     public MainMenuAction(String id, String name) {
         super(id, name, null, null);
@@ -38,7 +37,7 @@ public class MainMenuAction extends MDAction {
     // Send path to XML file to HoustonAPI
     // (Assuming that HoustonAPI is running locally)
     // String fileName = path to XML file
-    private String getFromAPI(String fileName) throws IOException {
+    public String getFromAPI(String fileName) throws IOException {
         URL url = new URL("http://127.0.0.1:5000/result?xml=" + fileName);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("GET");
@@ -49,6 +48,7 @@ public class MainMenuAction extends MDAction {
         StringBuffer content = new StringBuffer();
         while ((inputLine = in.readLine()) != null) {
             content.append(inputLine);
+            content.append("\n");
         }
         in.close();
         con.disconnect();
