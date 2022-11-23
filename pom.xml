@@ -111,6 +111,13 @@
       <systemPath>${magicdraw.lib}/javax.jmi-1.0.jar</systemPath>
     </dependency>
     <dependency>
+      <groupId>com.nomagic.magicdraw</groupId>
+      <artifactId>diagram</artifactId>
+      <version>latest</version>
+      <scope>system</scope>
+      <systemPath>${magicdraw.lib}/com.nomagic.magicdraw.core.diagram-2022.0.0-SNAPSHOT.jar</systemPath>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>RELEASE</version>
