@@ -2,32 +2,17 @@ package hu.modeldriven.cameo;
 
 import com.nomagic.magicdraw.core.Application;
 import com.nomagic.magicdraw.core.Project;
+import com.nomagic.magicdraw.core.project.ProjectDescriptor;
+import com.nomagic.magicdraw.core.project.ProjectDescriptorsFactory;
+import com.nomagic.magicdraw.core.project.ProjectsManager;
 import com.nomagic.magicdraw.ui.actions.DefaultDiagramAction;
 import com.nomagic.magicdraw.uml.RepresentationTextCreator;
 import com.nomagic.magicdraw.uml.symbols.DiagramPresentationElement;
 import com.nomagic.magicdraw.uml.symbols.PresentationElement;
-import com.nomagic.ui.ScalableImageIcon;
-
-import java.awt.event.ActionEvent;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-import com.nomagic.magicdraw.actions.MDAction;
-import com.nomagic.magicdraw.core.Application;
-import com.nomagic.magicdraw.core.Project;
-import com.nomagic.magicdraw.core.project.ProjectDescriptor;
-import com.nomagic.magicdraw.core.project.ProjectDescriptorsFactory;
-import com.nomagic.magicdraw.core.project.ProjectsManager;
-import com.nomagic.magicdraw.ui.browser.Tree;
 import com.nomagic.uml2.ext.magicdraw.classes.mdkernel.Element;
 
 import java.awt.event.ActionEvent;
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.IOException;
 import java.util.List;
 
 public class DiagramAction extends DefaultDiagramAction {
@@ -42,6 +27,7 @@ public class DiagramAction extends DefaultDiagramAction {
 
     }
 
+    // Send correct API request to Houston
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
         var presentationElements = getSelected();
@@ -95,36 +81,7 @@ public class DiagramAction extends DefaultDiagramAction {
             Application.getInstance().getGUILog().showMessage("Please first select a node");
         }
     }
-/*
-    // Send path to XML file to HoustonAPI
-    // (Assuming that HoustonAPI is running locally)
-    // String fileName = path to XML file
-    public String getFromAPI(String fileName, String diagramElementName) throws IOException {
-        URL url = new URL("http://127.0.0.1:5000/result?xml=" + fileName + "&" + "element=" + diagramElementName + "&" + "request=recommendations" );
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod("POST");
-        con.setRequestProperty("Content-Type", "application/json");
-        con.setRequestProperty("Accept", "application/json");
-        con.setDoOutput(true);
-        con.setDoInput(true);
-        //String jsonInputString = "{ \"method\" : \"guru.test\", \"params\" : [ \"jinu awad\" ], \"id\" : 123 }";
-        //OutputStream os = con.getOutputStream();
-        //os.write(jsonInputString.getBytes("UTF-8"));
-        //os.close();
-        BufferedReader in = new BufferedReader(
-                new InputStreamReader(con.getInputStream()));
-        String inputLine;
-        StringBuffer content = new StringBuffer();
-        while ((inputLine = in.readLine()) != null) {
-            content.append(inputLine);
-            content.append("\n");
-        }
-        in.close();
-        con.disconnect();
 
-        return content.toString();
-    }
-*/
     // Saves project to ensure we have current version
     private Project saveProject(){
         ProjectsManager projectsManager = Application.getInstance().getProjectsManager();

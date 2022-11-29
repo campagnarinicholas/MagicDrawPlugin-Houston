@@ -4,6 +4,7 @@ import com.nomagic.magicdraw.core.Project;
 import com.nomagic.magicdraw.uml.RepresentationTextCreator;
 import com.nomagic.magicdraw.uml.symbols.DiagramPresentationElement;
 import com.nomagic.magicdraw.uml.symbols.PresentationElement;
+import com.nomagic.uml2.ext.magicdraw.classes.mdkernel.Diagram;
 import com.nomagic.uml2.ext.magicdraw.classes.mdkernel.Element;
 
 import java.io.BufferedReader;
@@ -13,13 +14,19 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 public class HoustonAPI {
     private Project project;
     private String modelName;
     private String author;
-
+    private static final ArrayList<String> cameoDiagramNames = new ArrayList<String>(
+            Arrays.asList("Diagram CostRollUpPattern", "Diagram Basic Units", "Diagram requirement verification",
+                    "Diagram rollup patterns", "Diagram PowerRollUpPattern", "Diagram MassRollUpPattern",
+                    "Diagram Basic Unit Categories")
+    );
     public HoustonAPI(Project project){
         this.project = project;
     }
@@ -28,7 +35,7 @@ public class HoustonAPI {
     // (Assuming that HoustonAPI is running locally)
     // String fileName = path to XML file
     public String getFromAPI(String fileName, String request, String body) throws IOException {
-        URL url = new URL("http://127.0.0.1:5000/result?xml=" + fileName + "&request=" + request);
+        URL url = new URL("http://127.0.0.1:5000/result?xml=" + fileName + "&request=" + request + getCurrentElements());
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("POST");
         con.setRequestProperty("Content-Type", "application/json");
@@ -50,7 +57,7 @@ public class HoustonAPI {
         return content.toString();
     }
 
-    // Send path to XML file to HoustonAPI
+    // Send API Post message
     // (Assuming that HoustonAPI is running locally)
     // String fileName = path to XML file
     public String getFromAPI(String fileName, String request, String body, String diagramElementName) throws IOException {
@@ -76,58 +83,91 @@ public class HoustonAPI {
         return content.toString();
     }
 
+    public String getCurrentElements(){
+        DiagramPresentationElement dpe = this.project.getActiveDiagram();
+        List<PresentationElement> elements = dpe.getPresentationElements();
+        String elementsArgument = "&elements=";
+
+        for( int i=1; i<elements.size(); i++ ){
+            elementsArgument +=  RepresentationTextCreator.getRepresentedText(elements.get(i)).replace("-", "");
+            if( i<elements.size() - 1 ){
+                elementsArgument += ",";
+            }
+        }
+        return elementsArgument.replace(" ", "%20");
+    }
+
+    // Build JSON request body for API
     public String buildAPIBody(Project project) {
+        Collection<DiagramPresentationElement> diagrams = project.getDiagrams();
+        ArrayList<DiagramPresentationElement> filteredDiagrams = new ArrayList<DiagramPresentationElement>();
+        for(DiagramPresentationElement currDiagram : diagrams){
+            if(!cameoDiagramNames.contains(currDiagram.getHumanName())){
+                filteredDiagrams.add(currDiagram);
+            }
+        }
         DiagramPresentationElement dpe = project.getActiveDiagram();
         List<PresentationElement> elements = dpe.getPresentationElements();
-        List<Element> ownedEls;
-        ArrayList<String> attributes = new ArrayList<String>();
-        ArrayList<String> behaviors = new ArrayList<String>();
         Element el;
-        String request = "{ \"elements\":[";
         el = elements.get(0).getElement();
         modelName = el.getHumanName();
         author = RepresentationTextCreator.getRepresentedText(((List<Element>) el.getOwnedElement()).get(3)).replace("\"", "");
-        String attributesAndBehaviors;
-        String type;
-        for( int i=1; i<elements.size(); i++){
-            request += "{";
-            el = elements.get(i).getElement();
-            request += String.format("\"name\":\"%s\",", RepresentationTextCreator.getRepresentedText(el));
-            ownedEls = (List<Element>) el.getOwnedElement();
-            getAttributesAndBehaviors(ownedEls, attributes, behaviors);
-            attributesAndBehaviors = addAttributesAndBehaviors(attributes, behaviors);
-            type = determineType(el);
-            request += attributesAndBehaviors;
-            request += String.format("\"author\":\"%s\",", author);
-            request += String.format("\"model\":\"%s\",", modelName);
-            request += "\"associations\":{},";
-            request += "\"axioms\":{},";
-            request += "\"lineage\":{\"parents\": {}, \"siblings\":{}, \"children\":{}},";
-            request += String.format("\"type\":\"%s\"", type);
-            if( i < elements.size() - 1) {
-                request += "},";
-            } else {
-                request += "}";
+
+        String request = "{ \"elements\":[";
+        for(int j=0; j<filteredDiagrams.size(); j++) { // TODO - change to indexing
+            dpe = filteredDiagrams.get(j);
+            dpe.ensureLoaded();
+            elements = dpe.getPresentationElements();
+            List<Element> ownedEls;
+            ArrayList<String> attributes = new ArrayList<String>();
+
+            String attributesAndBehaviors;
+            String type;
+            for( int i=1; i<elements.size(); i++) {
+                request += "{";
+                el = elements.get(i).getElement();
+                request += String.format("\"name\":\"%s\",", RepresentationTextCreator.getRepresentedText(el).replace("-", ""));
+                ownedEls = (List<Element>) el.getOwnedElement();
+                getAttributesAndBehaviors(ownedEls, attributes);
+                attributesAndBehaviors = addAttributesAndBehaviors(attributes);
+                type = determineType(el);
+                request += attributesAndBehaviors;
+                request += String.format("\"author\":\"%s\",", author);
+                request += String.format("\"model\":\"%s\",", modelName);
+                request += "\"associations\":{},";
+                request += "\"axioms\":{},";
+                request += "\"lineage\":{\"parents\": {}, \"siblings\":{}, \"children\":{}},";
+                request += String.format("\"type\":\"%s\"", type);
+                if (i < elements.size() - 1) {
+                    request += "},";
+                } else {
+                    request += "}";
+                }
+            }
+            if( j < filteredDiagrams.size()-1 && elements.size() > 1){
+                request += ",";
             }
         }
         request += "]}";
         return request;
     }
 
+    // Determine type for our element for Houston DB
     private String determineType(Element el) {
         String human_type = el.getHumanType().toLowerCase();
         if( human_type.contains("signal") ){
             return "signal";
         } else if( human_type.contains("interface") ) {
             return "interface";
-        } else if( human_type.compareTo("block") == 0 ) {
+        } else if( human_type.compareTo("block") == 0 || human_type.compareTo("part property") == 0) {
             return "device";
         } else {
             return human_type;
         }
     }
 
-    public String addAttributesAndBehaviors(ArrayList<String> attributes, ArrayList<String> behaviors) {
+    // Builds attribute string for JSON request body
+    public String addAttributesAndBehaviors(ArrayList<String> attributes) {
         String attributeVal;
         String[] attributeVals;
         String request = "";
@@ -164,17 +204,14 @@ public class HoustonAPI {
         return request;
     }
 
-    private void getAttributesAndBehaviors(List<Element> ownedEls, ArrayList<String> attributes, List<String> behaviors) {
+    // Get attributes and sorts to array
+    private void getAttributesAndBehaviors(List<Element> ownedEls, ArrayList<String> attributes) {
         String ownedElement;
         attributes.clear();
-        behaviors.clear();
         for( int i=0; i<ownedEls.size(); i++){
             ownedElement = RepresentationTextCreator.getRepresentedText(ownedEls.get(i)).replace("'", "");
-            if( ownedElement.toLowerCase().contains("behavior")) {
-                attributes.add(ownedElement);
-            } else {
-                attributes.add(ownedElement);
-            }
+            ownedElement = ownedElement.replace("\"", "");
+            attributes.add(ownedElement);
         }
     }
 
