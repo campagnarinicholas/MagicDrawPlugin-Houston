@@ -15,11 +15,13 @@ import com.nomagic.uml2.ext.magicdraw.auxiliaryconstructs.mdinformationflows.Inf
 import com.nomagic.uml2.ext.magicdraw.classes.mdkernel.Diagram;
 import com.nomagic.uml2.ext.magicdraw.classes.mdkernel.Element;
 import com.nomagic.uml2.ext.magicdraw.classes.mdkernel.ElementValue;
+import com.nomagic.uml2.ext.magicdraw.classes.mdkernel.NamedElement;
 import com.nomagic.uml2.ext.magicdraw.compositestructures.mdinternalstructures.ConnectableElement;
 import com.nomagic.uml2.ext.magicdraw.compositestructures.mdinternalstructures.Connector;
 
 import java.awt.event.ActionEvent;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -87,7 +89,19 @@ public class MainMenuAction extends MDAction {
                         if(el.getHumanType().compareTo("Connector") == 0) {
                             List<InformationFlow> ifs = (List<InformationFlow>) ((Connector) el).get_informationFlowOfRealizingConnector();
                             for(InformationFlow flow : ifs) {
-                                response += flow.getHumanName() + "\n";
+                                Collection<NamedElement> infoSource = flow.getInformationSource();
+                                Collection<NamedElement> infoTarg = flow.getInformationTarget();
+                                response += "Information Flow: Name\n" + flow.getHumanName() + "\n";
+                                response += "Info Source\n";
+                                for( NamedElement info : infoSource ){
+                                    response += info.getHumanName() + "\n";
+                                    response += RepresentationTextCreator.getRepresentedText(info).replace("-", "") + "\n";
+                                }
+                                response += "Info Targ\n";
+                                for( NamedElement info : infoTarg ){
+                                    response += info.getHumanName() + "\n";
+                                    response += RepresentationTextCreator.getRepresentedText(info).replace("-", "") + "\n";
+                                }
                             }
                         }
                         ownedElVals = (List<ElementValue>) el.get_elementValueOfElement();
