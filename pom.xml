@@ -8,7 +8,7 @@
   <properties>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
-    <magicdraw.home>C:\Program Files\MagicDraw Demo</magicdraw.home>
+    <magicdraw.home>C:\Program Files\Magic Systems of Systems Architect</magicdraw.home>
     <magicdraw.lib>${magicdraw.home}/lib</magicdraw.lib>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -66,28 +66,28 @@
       <artifactId>uml2</artifactId>
       <version>latest</version>
       <scope>system</scope>
-      <systemPath>${magicdraw.lib}/com.nomagic.magicdraw.uml2-2021.2.0-SNAPSHOT.jar</systemPath>
+      <systemPath>${magicdraw.lib}/com.nomagic.magicdraw.uml2-2022.0.0-SNAPSHOT.jar</systemPath>
     </dependency>
     <dependency>
       <groupId>com.nomagic.magicdraw</groupId>
       <artifactId>foundation</artifactId>
       <version>latest</version>
       <scope>system</scope>
-      <systemPath>${magicdraw.lib}/com.nomagic.magicdraw.foundation-2021.2.0-SNAPSHOT.jar</systemPath>
+      <systemPath>${magicdraw.lib}/com.nomagic.magicdraw.foundation-2022.0.0-SNAPSHOT.jar</systemPath>
     </dependency>
     <dependency>
       <groupId>com.nomagic.magicdraw</groupId>
       <artifactId>modeling</artifactId>
       <version>latest</version>
       <scope>system</scope>
-      <systemPath>${magicdraw.lib}/com.nomagic.magicdraw.modeling-2021.2.0-SNAPSHOT.jar</systemPath>
+      <systemPath>${magicdraw.lib}/com.nomagic.magicdraw.modeling-2022.0.0-SNAPSHOT.jar</systemPath>
     </dependency>
     <dependency>
       <groupId>com.nomagic.magicdraw</groupId>
       <artifactId>common</artifactId>
       <version>latest</version>
       <scope>system</scope>
-      <systemPath>${magicdraw.lib}/common-2021.2.0-SNAPSHOT.jar</systemPath>
+      <systemPath>${magicdraw.lib}/common-2022.0.0-SNAPSHOT.jar</systemPath>
     </dependency>
     <dependency>
       <groupId>com.nomagic.magicdraw</groupId>
@@ -109,6 +109,37 @@
       <version>latest</version>
       <scope>system</scope>
       <systemPath>${magicdraw.lib}/javax.jmi-1.0.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.nomagic.magicdraw</groupId>
+      <artifactId>diagram</artifactId>
+      <version>latest</version>
+      <scope>system</scope>
+      <systemPath>${magicdraw.lib}/com.nomagic.magicdraw.core.diagram-2022.0.0-SNAPSHOT.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>RELEASE</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>RELEASE</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>RELEASE</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>RELEASE</version>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
 </project>

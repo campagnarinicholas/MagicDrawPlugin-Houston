@@ -6,54 +6,115 @@ import com.nomagic.magicdraw.core.Project;
 import com.nomagic.magicdraw.core.project.ProjectDescriptor;
 import com.nomagic.magicdraw.core.project.ProjectDescriptorsFactory;
 import com.nomagic.magicdraw.core.project.ProjectsManager;
+import com.nomagic.magicdraw.uml.ConnectorsCollector;
+import com.nomagic.magicdraw.uml.RepresentationTextCreator;
+import com.nomagic.magicdraw.uml.symbols.DiagramPresentationElement;
+import com.nomagic.magicdraw.uml.symbols.PresentationElement;
+import com.nomagic.magicdraw.uml.symbols.SymbolElementMap;
+import com.nomagic.uml2.ext.magicdraw.auxiliaryconstructs.mdinformationflows.InformationFlow;
+import com.nomagic.uml2.ext.magicdraw.classes.mdkernel.Diagram;
+import com.nomagic.uml2.ext.magicdraw.classes.mdkernel.Element;
+import com.nomagic.uml2.ext.magicdraw.classes.mdkernel.ElementValue;
+import com.nomagic.uml2.ext.magicdraw.compositestructures.mdinternalstructures.ConnectableElement;
+import com.nomagic.uml2.ext.magicdraw.compositestructures.mdinternalstructures.Connector;
 
 import java.awt.event.ActionEvent;
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 public class MainMenuAction extends MDAction {
+    private static final String recommendations = "Generate All Recommendations";
+    private static final String rules = "Check Against Rules";
+
+    private static final String debug = "Show All Attributes";
+    private static final ArrayList<String> cameoDiagramNames = new ArrayList<String>(
+            Arrays.asList("Diagram CostRollUpPattern", "Diagram Basic Units", "Diagram requirement verification",
+                    "Diagram rollup patterns", "Diagram PowerRollUpPattern", "Diagram MassRollUpPattern",
+                    "Diagram Basic Unit Categories")
+    );
+    private String name;
     public MainMenuAction(String id, String name) {
         super(id, name, null, null);
+        this.name = name;
     }
 
-    // To be called onclick of MenuItem
+    // To be called onclick of MenuItem. Determines action to take, sends
+    // correct request to API, then displays API response.
     // ActionEvent actionEvent - event that happened to call this fn
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
         Project project = saveProject();
-        String response = null;
+        String response = "";
         String fileName = project.getFileName();
+        HoustonAPI api = new HoustonAPI(project);
+        String body = api.buildAPIBody(project);
 
-        if (fileName != null) {fileName = fileName.replace(" ", "%20");} // Make usable as API param
+        if (fileName != null) {
+            fileName = fileName.replace(" ", "%20");
+        } // Make usable as API param
         try {
-            response = getFromAPI(fileName);
+            if( this.name.compareTo(recommendations) == 0 ) {
+                response = api.getFromAPI(fileName, "recommendations", body);
+            } else if ( this.name.compareTo(rules) == 0 ) {
+                response = api.getFromAPI(fileName, "rules", body);
+                //response = body;
+            } else if ( this.name.compareTo(debug) == 0 ) {
+                Collection<DiagramPresentationElement> diagrams = project.getDiagrams();
+                ArrayList<DiagramPresentationElement> filteredDiagrams = new ArrayList<DiagramPresentationElement>();
+                response += "---\nDiagrams Start\n---\n";
+                for(DiagramPresentationElement currDiagram : diagrams){
+                    if(!cameoDiagramNames.contains(currDiagram.getHumanName())){
+                        filteredDiagrams.add(currDiagram);
+                    }
+                }
+                for(DiagramPresentationElement currDiagram : filteredDiagrams) {
+                    response += currDiagram.getHumanName() + "\n";
+                }
+                response += "---\nDiagrams End\n---\n";
+                for(DiagramPresentationElement currDiagram : filteredDiagrams ) {
+                    response += String.format("---\nDiagram %s Start\n---\n", currDiagram.getHumanName());
+                    DiagramPresentationElement dpe = currDiagram;
+                    dpe.ensureLoaded();
+                    List<PresentationElement> elements = dpe.getPresentationElements();
+                    List<Element> ownedEls;
+                    List<ElementValue> ownedElVals;
+                    Element el;
+                    for (int i = 0; i < elements.size(); i++) {
+                        el = elements.get(i).getElement();
+                        if(el.getHumanType().compareTo("Connector") == 0) {
+                            List<InformationFlow> ifs = (List<InformationFlow>) ((Connector) el).get_informationFlowOfRealizingConnector();
+                            for(InformationFlow flow : ifs) {
+                                response += flow.getHumanName() + "\n";
+                            }
+                        }
+                        ownedElVals = (List<ElementValue>) el.get_elementValueOfElement();
+                        response += "\n*Owned El Vals*\n";
+                        for(ElementValue elval : ownedElVals) {
+                            response += elval.getHumanName();
+                        }
+                        response += "\n*Owned El Vals End*\n";
+                        response += RepresentationTextCreator.getRepresentedText(el);
+                        ownedEls = (List<Element>) el.getOwnedElement();
+                        response += "\n*Owned El*\n";
+                        for (int j = 0; j < ownedEls.size(); j++) {
+                            response += RepresentationTextCreator.getRepresentedText(ownedEls.get(j));
+                            response += "\n";
+                        }
+                        response += "\n*Type*\n" + el.getHumanType();
+                        response += "\n---\n";
+                    }
+                    response += String.format("---\nDiagram %s End\n---\n", currDiagram.getHumanName());
+                }
+            } else {
+                response = "Unrecognized Command";
+            }
             Application.getInstance().getGUILog().showMessage(response);
         } catch (IOException e) {
             Application.getInstance().getGUILog().showMessage(e.getMessage());
         }
-    }
-
-    // Send path to XML file to HoustonAPI
-    // (Assuming that HoustonAPI is running locally)
-    // String fileName = path to XML file
-    private String getFromAPI(String fileName) throws IOException {
-        URL url = new URL("http://127.0.0.1:5000/result?xml=" + fileName);
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod("GET");
-
-        BufferedReader in = new BufferedReader(
-                new InputStreamReader(con.getInputStream()));
-        String inputLine;
-        StringBuffer content = new StringBuffer();
-        while ((inputLine = in.readLine()) != null) {
-            content.append(inputLine);
-        }
-        in.close();
-        con.disconnect();
-
-        return content.toString();
     }
 
     // Saves project to ensure we have current version
@@ -67,25 +128,3 @@ public class MainMenuAction extends MDAction {
     }
 
 }
-
-/*
-sending to python
-{
-    xml: String(all_the_xml_data)
-}
-receiving from python
-{
-    suggestion_1: String(suggestion)
-    suggestion_2: String(suggestion)
-}
-
-step 1 - figure out jar files -> blocked until we talk to alejandro or someone else who knows magicdraw???
-step 2 - figure out better way to send xml
-        current- must save as .xml BEFORE hitting button to activate plugin
-        future- hit button, send .xml immediately
-step 3 - figure out suggestions from python
-        How do we send suggestions back through api?
-step 4 - update CAMEO ui to show suggestions
-
-
- */
