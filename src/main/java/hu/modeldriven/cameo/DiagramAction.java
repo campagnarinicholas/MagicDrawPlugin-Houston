@@ -35,7 +35,7 @@ public class DiagramAction extends DefaultDiagramAction {
         if (presentationElements != null && presentationElements.size() > 0) {
             var presentationElement = presentationElements.get(0);
 
-            var name = presentationElement.getElement().getHumanName();
+            var name = RepresentationTextCreator.getRepresentedText(presentationElement).replace("-", "");
 
             Project project = saveProject();
             String response = "";
@@ -46,7 +46,7 @@ public class DiagramAction extends DefaultDiagramAction {
             if (fileName != null) {
                 fileName = fileName.replace(" ", "%20");
             }
-            name = name.replace(" ", ";"); // Make usable as API param
+            name = name.replace(" ", "%20"); // Make usable as API param
             try {
                 if( this.name.compareTo(recommendations) == 0 ) {
                     response = api.getFromAPI(fileName, "recommendations", body, name);

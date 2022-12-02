@@ -126,11 +126,11 @@ public class HoustonAPI {
             for( int i=1; i<elements.size(); i++) {
                 request += "{";
                 el = elements.get(i).getElement();
-                request += String.format("\"name\":\"%s\",", RepresentationTextCreator.getRepresentedText(el).replace("-", ""));
                 ownedEls = (List<Element>) el.getOwnedElement();
                 getAttributesAndBehaviors(ownedEls, attributes);
                 attributesAndBehaviors = addAttributesAndBehaviors(attributes);
                 type = determineType(el);
+                request += String.format("\"name\":\"%s\",", RepresentationTextCreator.getRepresentedText(el).replace("-", ""));
                 request += attributesAndBehaviors;
                 request += String.format("\"author\":\"%s\",", author);
                 request += String.format("\"model\":\"%s\",", modelName);
@@ -172,6 +172,7 @@ public class HoustonAPI {
         String[] attributeVals;
         String request = "";
         request += "\"attributes\":{";
+
         for( int j=0; j< attributes.size(); j++){
             attributeVal = attributes.get(j);
             if( attributeVal.contains("=") ){
@@ -180,11 +181,13 @@ public class HoustonAPI {
             } else {
                 request += "\"attribute" + String.valueOf(j) + "\":\"" + attributes + '"';
             }
-            if( j < attributes.size() - 1 ) {
-                request += ",";
-            }
+            //if( j < attributes.size() - 1 ) {
+            request += ",";
+            //}
 
-        }/*
+        }
+        request += "\"ignored\":[]";
+        /*
         request += "\"behaviors\":[";
         for( int j=0; j< behaviors.size(); j++) {
             request += "{";
