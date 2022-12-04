@@ -13,6 +13,7 @@ import com.nomagic.uml2.ext.magicdraw.classes.mdkernel.Element;
 
 import java.awt.event.ActionEvent;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DiagramAction extends DefaultDiagramAction {
@@ -52,6 +53,15 @@ public class DiagramAction extends DefaultDiagramAction {
                     response = api.getFromAPI(fileName, "recommendations", body, name);
                 } else if( this.name.compareTo(rules) == 0 ) {
                     response = api.getFromAPI(fileName, "rules", body, name);
+                    String[] gaps = response.split("GAP FOUND = ");
+                    ArrayList<String> ignored_gaps = new ArrayList<>();
+                    for(int i=1; i<gaps.length; i++) {
+                        String handle = Application.getInstance().getGUILog().showInputTextDialog("%s\nHow would you like to handle? [ignore, modify,copy,create]".format(gaps[i]), "%s\nHow would you like to handle? [ignore, modify,copy,create]".format(gaps[i]));
+                        if(handle.compareTo("ignore") == 0) {
+                            ignored_gaps.add(gaps[i]);
+                        }
+                    }
+                    api.postIgnores(ignored_gaps);
                 } else if( this.name.compareTo(debug) == 0 ){
                     DiagramPresentationElement dpe = project.getActiveDiagram();
                     List<PresentationElement> elements = dpe.getPresentationElements();

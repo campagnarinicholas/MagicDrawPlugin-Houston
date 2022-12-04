@@ -16,6 +16,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
@@ -23,13 +24,17 @@ public class HoustonAPI {
     private Project project;
     private String modelName;
     private String author;
+    private String curr_element;
     private static final ArrayList<String> cameoDiagramNames = new ArrayList<String>(
             Arrays.asList("Diagram CostRollUpPattern", "Diagram Basic Units", "Diagram requirement verification",
                     "Diagram rollup patterns", "Diagram PowerRollUpPattern", "Diagram MassRollUpPattern",
                     "Diagram Basic Unit Categories")
     );
+    private HashMap<String, HoustonDBNode> nodesMap;
+
     public HoustonAPI(Project project){
         this.project = project;
+        this.curr_element = "";
     }
 
     // Send path to XML file to HoustonAPI
@@ -41,9 +46,13 @@ public class HoustonAPI {
         con.setRequestMethod("POST");
         con.setRequestProperty("Content-Type", "application/json");
         con.setDoOutput(true);
+
+        // Write body
         OutputStream os = con.getOutputStream();
         os.write(body.getBytes());
         os.close();
+
+        // Read response
         BufferedReader in = new BufferedReader(
                 new InputStreamReader(con.getInputStream()));
         String inputLine;
@@ -62,6 +71,7 @@ public class HoustonAPI {
     // (Assuming that HoustonAPI is running locally)
     // String fileName = path to XML file
     public String getFromAPI(String fileName, String request, String body, String diagramElementName) throws IOException {
+        this.curr_element = diagramElementName;
         URL url = new URL("http://127.0.0.1:5000/result?xml=" + fileName + "&request=" + request + "&element=" + diagramElementName);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("POST");
@@ -84,6 +94,32 @@ public class HoustonAPI {
         return content.toString();
     }
 
+    public void postIgnores(ArrayList<String> ignored_gaps) throws IOException {
+        String request = "http://127.0.0.1:5000/ignore?element=" + curr_element;
+        for(String gap : ignored_gaps) {
+            request += "&gap=" + gap.replace(" ", "%20");
+        }
+
+        URL url = new URL(request);
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setDoOutput(true);
+
+        // Read response
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuffer content = new StringBuffer();
+        while ((inputLine = in.readLine()) != null) {
+            content.append(inputLine);
+            content.append("\n");
+        }
+        in.close();
+
+        con.disconnect();
+    }
+
     public String getCurrentElements(){
         DiagramPresentationElement dpe = this.project.getActiveDiagram();
         List<PresentationElement> elements = dpe.getPresentationElements();
@@ -92,9 +128,6 @@ public class HoustonAPI {
         for( int i=1; i<elements.size(); i++ ){
             el = (NamedElement) elements.get(i).getElement();
             elementsArgument +=  "&elements=" + RepresentationTextCreator.getRepresentedText(el).replace("-", "").replace("&", "%26");
-            /*if( i<elements.size() - 1 ){
-                elementsArgument += ",";
-            }*/
         }
         return elementsArgument.replace(" ", "%20").replace(":", "%3A"); // Remove spaces and common URL-API reserved char
     }
@@ -237,6 +270,7 @@ public class HoustonAPI {
                 endpointSource.addAssociate(endpointTarg, "information flow");
             }
         }
+        this.nodesMap = houstonDBNodes;
         return houstonDBNodesList;
     }
 
